@@ -5,7 +5,7 @@ module.exports = {
     BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
     WEBHOOK_URL: process.env.WEBHOOK_URL,
     
-    // Google Cloud configuration
+    // Google Cloud configuration (optional - not needed for memory database)
     GOOGLE_CLOUD_PROJECT_ID: process.env.GOOGLE_CLOUD_PROJECT_ID,
     
     // OpenRouter API for translations

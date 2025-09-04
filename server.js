@@ -1,6 +1,6 @@
 const express = require('express');
 const TelegramBot = require('node-telegram-bot-api');
-const Database = require('./database');
+const MemoryDatabase = require('./memoryDatabase');
 const config = require('./config');
 const { LanguageManager } = require('./languages');
 
@@ -20,7 +20,7 @@ class TelegramBotServer {
 
         // Initialize bot in webhook mode (no polling)
         this.bot = new TelegramBot(config.BOT_TOKEN, { webHook: true });
-        this.db = new Database();
+        this.db = new MemoryDatabase();
         this.langManager = new LanguageManager();
         
         // Initialize handlers
