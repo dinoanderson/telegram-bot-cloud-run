@@ -1,0 +1,28 @@
+{
+  "name": "telegram-bot-cloud-run",
+  "version": "1.0.0",
+  "description": "Telegram bot for Cloud Run deployment with webhook support",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "set-webhook": "node scripts/set-webhook.js",
+    "delete-webhook": "node scripts/delete-webhook.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-telegram-bot-api": "^0.66.0",
+    "@google-cloud/firestore": "^7.1.0",
+    "dotenv": "^16.4.7",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["telegram", "bot", "cloud-run", "webhook", "advertising", "accounts"],
+  "author": "",
+  "license": "MIT"
+}
