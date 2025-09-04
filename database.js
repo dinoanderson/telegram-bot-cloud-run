@@ -38,14 +38,18 @@ class Database {
                 const platform = product.platform || 'Unknown';
                 
                 if (!stats[platform]) {
-                    stats[platform] = 0;
+                    stats[platform] = { total: 0, in_stock: 0 };
                 }
-                stats[platform]++;
+                stats[platform].total++;
+                if (product.stock > 0) {
+                    stats[platform].in_stock++;
+                }
             });
             
-            return Object.entries(stats).map(([platform, count]) => ({
+            return Object.entries(stats).map(([platform, counts]) => ({
                 platform,
-                count
+                total: counts.total,
+                in_stock: counts.in_stock
             }));
         } catch (error) {
             console.error('Error getting platform stats:', error);
@@ -67,17 +71,63 @@ class Database {
                 const category = product.platform_category || 'Uncategorized';
                 
                 if (!stats[category]) {
-                    stats[category] = 0;
+                    stats[category] = { total: 0, in_stock: 0 };
                 }
-                stats[category]++;
+                stats[category].total++;
+                if (product.stock > 0) {
+                    stats[category].in_stock++;
+                }
             });
             
-            return Object.entries(stats).map(([category, count]) => ({
-                category,
-                count
+            return Object.entries(stats).map(([platform_category, counts]) => ({
+                platform_category,
+                total: counts.total,
+                in_stock: counts.in_stock
             }));
         } catch (error) {
             console.error('Error getting category stats:', error);
+            return [];
+        }
+    }
+
+    // Get price range statistics
+    async getPriceRangeStats() {
+        try {
+            const snapshot = await this.productsCollection.get();
+            const priceRanges = config.PRICE_RANGES.map(range => ({
+                ...range,
+                total: 0,
+                in_stock: 0
+            }));
+            
+            snapshot.docs.forEach(doc => {
+                const product = doc.data();
+                const price = product.price || 0;
+                
+                // Find which price range this product belongs to
+                for (const range of priceRanges) {
+                    if (price >= range.min && price <= range.max) {
+                        range.total++;
+                        if (product.stock > 0) {
+                            range.in_stock++;
+                        }
+                        break;
+                    }
+                }
+            });
+            
+            // Only return ranges that have products
+            return priceRanges
+                .filter(range => range.total > 0)
+                .map(range => ({
+                    price_range: range.label,
+                    total: range.total,
+                    in_stock: range.in_stock,
+                    min: range.min,
+                    max: range.max
+                }));
+        } catch (error) {
+            console.error('Error getting price range stats:', error);
             return [];
         }
     }

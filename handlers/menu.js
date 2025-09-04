@@ -2,15 +2,45 @@ const Keyboards = require('../keyboards');
 const config = require('../config');
 
 class MenuHandler {
-    constructor(bot, database) {
+    constructor(bot, database, langManager) {
         this.bot = bot;
         this.db = database;
+        this.langManager = langManager;
     }
 
-    async showMainMenu(chatId, messageId = null) {
+    async showWelcome(chatId, userId) {
         try {
-            const message = '🏠 **Main Menu**\n\nChoose an option below to browse our products:';
-            const keyboard = Keyboards.mainMenu();
+            // First show language selection
+            const message = '🌍 **Welcome!**\n\nPlease select your language / 请选择您的语言:';
+            const keyboard = this.langManager.getLanguageSelectionKeyboard();
+            
+            await this.bot.sendMessage(chatId, message, {
+                parse_mode: 'Markdown',
+                reply_markup: keyboard
+            });
+        } catch (error) {
+            console.error('Error showing welcome:', error);
+            await this.bot.sendMessage(chatId, config.MESSAGES.ERROR);
+        }
+    }
+
+    async handleLanguageSelection(chatId, userId, language, messageId = null) {
+        try {
+            // Set user language
+            this.langManager.setUserLanguage(userId, language);
+            
+            // Show main menu in selected language
+            await this.showMainMenu(chatId, userId, messageId);
+        } catch (error) {
+            console.error('Error handling language selection:', error);
+            await this.bot.sendMessage(chatId, config.MESSAGES.ERROR);
+        }
+    }
+
+    async showMainMenu(chatId, userId, messageId = null) {
+        try {
+            const message = this.langManager.getMessage(userId, 'MAIN_MENU');
+            const keyboard = Keyboards.mainMenu(userId);
 
             if (messageId) {
                 await this.bot.editMessageText(message, {

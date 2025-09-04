@@ -119,9 +119,9 @@ class TelegramBotServer {
                         
                     case 'browse':
                         if (params[0] === 'platform') {
-                            await this.menuHandler.showPlatforms(chatId, userId, query.message.message_id);
+                            await this.menuHandler.showPlatforms(chatId, query.message.message_id);
                         } else if (params[0] === 'price') {
-                            await this.menuHandler.showPriceRanges(chatId, userId, query.message.message_id);
+                            await this.menuHandler.showPriceRanges(chatId, query.message.message_id);
                         }
                         break;
                         
@@ -179,6 +179,30 @@ class TelegramBotServer {
                         await this.cartHandler.handleCartAction(chatId, userId, params, query.message.message_id);
                         break;
                         
+                    case 'settings':
+                        await this.menuHandler.showSettings(chatId, query.message.message_id);
+                        break;
+                        
+                    case 'in':
+                        if (params[0] === 'stock') {
+                            await this.productHandler.showInStockProducts(chatId, 1, query.message.message_id);
+                        }
+                        break;
+                        
+                    case 'search':
+                        if (params.length === 0) {
+                            await this.handleSearch(chatId, userId);
+                        }
+                        break;
+                        
+                    case 'statistics':
+                        await this.menuHandler.showStatistics(chatId);
+                        break;
+                        
+                    case 'help':
+                        await this.menuHandler.showHelp(chatId);
+                        break;
+                        
                     default:
                         console.log(`⚠️ Unknown callback action: ${action}`);
                         await this.bot.answerCallbackQuery(query.id, {
@@ -227,9 +251,7 @@ class TelegramBotServer {
             // Initialize database
             await this.db.init();
             
-            // Set up language manager with Keyboards
-            const Keyboards = require('./keyboards');
-            Keyboards.setLanguageManager(this.langManager);
+            // Keyboards already has its own language manager instance
             
             console.log('🤖 Bot initialized successfully!');
             
