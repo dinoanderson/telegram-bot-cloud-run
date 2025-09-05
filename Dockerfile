@@ -13,6 +13,9 @@ RUN npm install --only=production && npm cache clean --force
 # Copy application code
 COPY . .
 
+# Verify products.json exists
+RUN ls -la /app/products.json
+
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S botuser -u 1001

@@ -1,5 +1,5 @@
 const path = require('path');
-const sqlite3 = require('sqlite3').verbose();
+const fs = require('fs');
 const config = require('./config');
 
 class MemoryDatabase {
@@ -10,14 +10,14 @@ class MemoryDatabase {
         this.categoryStats = new Map(); // platform -> categories
         this.priceStats = [];
         
-        // Path to the main SQLite database
-        this.dbPath = path.join(__dirname, 'products.db');
+        // Path to the products JSON file
+        this.jsonPath = path.join(__dirname, 'products.json');
     }
 
     async init() {
         try {
-            console.log('🔄 Loading products from SQLite database...');
-            await this.loadProductsFromSQLite();
+            console.log('🔄 Loading products from JSON file...');
+            this.loadProductsFromJSON();
             this.calculateStats();
             console.log(`✅ Loaded ${this.products.length} products into memory`);
             console.log('✅ Memory database ready for use');
@@ -27,72 +27,27 @@ class MemoryDatabase {
         }
     }
 
-    async loadProductsFromSQLite() {
-        return new Promise((resolve, reject) => {
-            console.log(`🔍 Looking for database at: ${this.dbPath}`);
-            
-            // Check if file exists first
-            const fs = require('fs');
-            if (!fs.existsSync(this.dbPath)) {
-                reject(new Error(`Database file not found at: ${this.dbPath}`));
-                return;
-            }
-            
-            const db = new sqlite3.Database(this.dbPath, sqlite3.OPEN_READONLY, (err) => {
-                if (err) {
-                    console.error(`❌ SQLite connection error: ${err.message}`);
-                    reject(err);
-                    return;
-                }
-                console.log('✅ Connected to SQLite database');
-            });
-
-            const query = `
-                SELECT 
-                    id,
-                    name,
-                    price,
-                    description,
-                    platform_category,
-                    stock,
-                    url,
-                    shop_domain,
-                    platform,
-                    currency,
-                    description_zh,
-                    category_zh as platform_category_zh
-                FROM products 
-                WHERE shop_domain = 'npprteam.shop' 
-                AND stock > 0
-                ORDER BY id
-            `;
-
-            db.all(query, [], (err, rows) => {
-                if (err) {
-                    db.close();
-                    reject(err);
-                    return;
-                }
-
-                // Transform SQLite rows to match expected format
-                this.products = rows.map(row => ({
-                    id: row.id,
-                    name: row.name || 'Untitled Product',
-                    price: parseFloat(row.price) || 0,
-                    description: row.description || '',
-                    platform_category: row.platform_category || 'Uncategorized',
-                    stock: parseInt(row.stock) || 0,
-                    url: row.url || '',
-                    platform: row.platform || 'facebook',
-                    currency: row.currency || 'USD',
-                    description_zh: row.description_zh || row.description || '',
-                    platform_category_zh: row.platform_category_zh || row.platform_category || 'Uncategorized'
-                }));
-
-                db.close();
-                resolve();
-            });
-        });
+    loadProductsFromJSON() {
+        console.log(`🔍 Looking for products at: ${this.jsonPath}`);
+        
+        // Check if file exists first
+        if (!fs.existsSync(this.jsonPath)) {
+            throw new Error(`Products file not found at: ${this.jsonPath}`);
+        }
+        
+        // Read and parse JSON file
+        const jsonData = JSON.parse(fs.readFileSync(this.jsonPath, 'utf8'));
+        
+        if (!jsonData.products || !Array.isArray(jsonData.products)) {
+            throw new Error('Invalid JSON format: products array not found');
+        }
+        
+        // Load products directly from JSON
+        this.products = jsonData.products;
+        
+        console.log(`✅ Loaded ${this.products.length} products from JSON`);
+        console.log(`📦 Shop: ${jsonData.shop}`);
+        console.log(`📅 Exported at: ${jsonData.exported_at}`);
     }
 
     calculateStats() {
@@ -418,10 +373,10 @@ class MemoryDatabase {
         }
     }
 
-    // Refresh products from SQLite (can be called periodically)
-    async refreshProducts() {
-        console.log('🔄 Refreshing products from database...');
-        await this.loadProductsFromSQLite();
+    // Refresh products from JSON (can be called periodically)
+    refreshProducts() {
+        console.log('🔄 Refreshing products from JSON...');
+        this.loadProductsFromJSON();
         this.calculateStats();
         console.log(`✅ Refreshed ${this.products.length} products`);
     }
