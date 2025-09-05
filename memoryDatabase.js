@@ -11,7 +11,7 @@ class MemoryDatabase {
         this.priceStats = [];
         
         // Path to the main SQLite database
-        this.dbPath = path.join(__dirname, '../products.db');
+        this.dbPath = path.join(__dirname, 'products.db');
     }
 
     async init() {
@@ -29,11 +29,22 @@ class MemoryDatabase {
 
     async loadProductsFromSQLite() {
         return new Promise((resolve, reject) => {
+            console.log(`🔍 Looking for database at: ${this.dbPath}`);
+            
+            // Check if file exists first
+            const fs = require('fs');
+            if (!fs.existsSync(this.dbPath)) {
+                reject(new Error(`Database file not found at: ${this.dbPath}`));
+                return;
+            }
+            
             const db = new sqlite3.Database(this.dbPath, sqlite3.OPEN_READONLY, (err) => {
                 if (err) {
+                    console.error(`❌ SQLite connection error: ${err.message}`);
                     reject(err);
                     return;
                 }
+                console.log('✅ Connected to SQLite database');
             });
 
             const query = `
