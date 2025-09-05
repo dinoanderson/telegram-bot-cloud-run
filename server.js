@@ -132,7 +132,7 @@ class TelegramBotServer {
                         
                     case 'category':
                         const [categoryPlatform, ...categoryParts] = params;
-                        const categoryName = categoryParts.join('_');
+                        const categoryName = decodeURIComponent(categoryParts.join('_'));
                         await this.productHandler.showCategoryProducts(chatId, categoryPlatform, categoryName, 1, query.message.message_id);
                         break;
                         
